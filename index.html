@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Tracker Treni</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        form {
+            display: grid;
+            gap: 10px;
+        }
+
+        input,
+        button {
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        #trainList {
+            margin-top: 20px;
+        }
+
+        .train-card {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Tracker Treni</h1>
+
+        <form id="trainForm">
+            <input type="text" id="trainNumber" name="trainNumber" placeholder="Numero Treno" required>
+            <input type="date" id="travelDate" name="travelDate" required>
+
+            <h3>Orari Previsti</h3>
+            <input type="time" id="expectedDeparture" name="expectedDeparture" placeholder="Partenza Prevista">
+            <input type="time" id="expectedArrival" name="expectedArrival" placeholder="Arrivo Previsto">
+
+            <h3>Orari Reali</h3>
+            <input type="time" id="actualDeparture" name="actualDeparture" placeholder="Partenza Reale">
+            <input type="time" id="actualArrival" name="actualArrival" placeholder="Arrivo Reale">
+
+            <button type="submit">Aggiungi Treno</button>
+        </form>
+
+        <div id="currentTrains"></div>
+
+        <div>
+            <h2>Cronologia Treni</h2>
+            <button id="loadTrains">Carica Cronologia</button>
+            <div id="trainHistory"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('trainForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            fetch('add_train.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Treno aggiunto con successo!');
+                        this.reset();
+                    } else {
+                        alert('Errore: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Errore:', error);
+                    alert('Errore nella comunicazione col server');
+                });
+        });
+
+        document.getElementById('loadTrains').addEventListener('click', function () {
+            fetch('get_trains.php')
+                .then(response => response.json())
+                .then(trains => {
+                    const trainHistoryDiv = document.getElementById('trainHistory');
+                    trainHistoryDiv.innerHTML = trains.map(train => `
+                    <div class="train-card">
+                        <p>Numero: ${train.numero}</p>
+                        <p>Data: ${train.dataViaggio}</p>
+                        <p>Previsto: ${train.partenzaPrevista} - ${train.arrivaloPrevisto}</p>
+                        <p>Reale: ${train.partenzaReale} - ${train.arrivoReale}</p>
+                    </div>
+                `).join('');
+                })
+                .catch(error => {
+                    console.error('Errore:', error);
+                    alert('Errore nel caricamento dei treni');
+                });
+        });
+    </script>
+</body>
+
+</html>
